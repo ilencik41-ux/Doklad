@@ -1,1 +1,441 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Doklad → POHODA</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0a0a12; color: #e8e8f0; font-family: system-ui, sans-serif; min-height: 100vh; }
+.wrap { max-width: 480px; margin: 0 auto; padding: 20px 16px 40px; }
 
+h1 { font-size: 20px; font-weight: 700; margin-bottom: 2px; }
+h1 span { color: #00e5a0; }
+.sub { font-size: 12px; color: #555; margin-bottom: 24px; }
+
+.step { background: #13131e; border: 1px solid #1e1e30; border-radius: 16px; padding: 18px; margin-bottom: 14px; }
+.step-title { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #00e5a0; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+.num { width: 22px; height: 22px; background: #00e5a0; color: #000; border-radius: 50%; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.num.done { background: #0a2a1a; color: #00e5a0; border: 1px solid #00e5a0; }
+
+.photo-area { width: 100%; aspect-ratio: 4/3; background: #07070d; border: 2px dashed #2a2a40; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: #444; font-size: 13px; overflow: hidden; margin-bottom: 12px; }
+.photo-area img { width: 100%; height: 100%; object-fit: cover; }
+.photo-area .ico { font-size: 36px; }
+
+.btn { width: 100%; padding: 13px; border-radius: 11px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; transition: all .2s; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px; }
+.btn:last-child { margin-bottom: 0; }
+.btn-green { background: #00e5a0; color: #000; }
+.btn-green:hover { background: #00ffb3; }
+.btn-green:disabled { background: #0a2a1a; color: #1a4a2a; cursor: not-allowed; }
+.btn-outline { background: transparent; color: #aaa; border: 1px solid #2a2a40; }
+.btn-outline:hover { border-color: #00e5a0; color: #00e5a0; }
+.btn-blue { background: #4466ff; color: #fff; }
+.btn-blue:hover { background: #5577ff; }
+.btn-blue:disabled { background: #1a1a30; color: #333; cursor: not-allowed; }
+.btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+.btn-row .btn { margin-bottom: 0; }
+
+.spin-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; }
+.spinner { width: 26px; height: 26px; border: 3px solid #1e1e30; border-top-color: #00e5a0; border-radius: 50%; animation: spin .7s linear infinite; flex-shrink: 0; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin-txt { font-size: 13px; color: #777; }
+
+.dtable { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+.dtable tr { border-bottom: 1px solid #181828; }
+.dtable tr:last-child { border-bottom: none; }
+.dtable td { padding: 7px 2px; font-size: 13px; vertical-align: top; }
+.dtable td:first-child { color: #555; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; width: 110px; padding-right: 10px; padding-top: 9px; }
+.iban { font-family: monospace; color: #00e5a0; font-size: 11px; }
+.amount { font-family: monospace; font-size: 17px; font-weight: 700; color: #00e5a0; }
+
+.xml-box { background: #07070d; border: 1px solid #1e1e30; border-radius: 10px; padding: 12px; font-family: monospace; font-size: 10px; line-height: 1.8; color: #4455aa; max-height: 180px; overflow-y: auto; margin-bottom: 10px; white-space: pre-wrap; word-break: break-all; }
+.tag { color: #00e5a0; }
+.val { color: #ffcc44; }
+
+.igroup { margin-bottom: 10px; }
+.ilabel { font-size: 10px; color: #555; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 5px; display: block; }
+.ifield { width: 100%; background: #07070d; border: 1px solid #2a2a40; border-radius: 10px; padding: 12px 13px; color: #e8e8f0; font-size: 14px; outline: none; transition: border .2s; }
+.ifield:focus { border-color: #4466ff; }
+.ifield::placeholder { color: #333; }
+
+.ok { color: #00e5a0; font-size: 13px; font-weight: 600; padding: 6px 0; display: flex; align-items: center; gap: 6px; }
+.fail { color: #ff4466; font-size: 12px; padding: 6px 0; line-height: 1.5; }
+.info-box { background: rgba(68,102,255,.07); border: 1px solid rgba(68,102,255,.2); border-radius: 10px; padding: 12px; font-size: 12px; color: #8899ff; line-height: 1.6; margin-bottom: 12px; }
+.info-box strong { color: #aabbff; }
+.warn-box { background: rgba(255,180,0,.06); border: 1px solid rgba(255,180,0,.2); border-radius: 10px; padding: 12px; font-size: 12px; color: #ccaa55; line-height: 1.6; margin-bottom: 12px; }
+
+.tabs { display: flex; border-bottom: 1px solid #1e1e30; margin-bottom: 14px; }
+.tab { flex: 1; padding: 9px; font-size: 12px; font-weight: 600; text-align: center; cursor: pointer; color: #555; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all .2s; }
+.tab.active { color: #00e5a0; border-bottom-color: #00e5a0; }
+
+input[type=file] { display: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Doklad <span>→ POHODA</span></h1>
+  <p class="sub">Odfotiť · AI extrakcia · mServer import</p>
+
+  <div class="step">
+    <div class="step-title"><div class="num" id="n1">1</div>Odfotiť doklad</div>
+    <div class="photo-area" id="photoArea">
+      <div class="ico">📄</div>
+      <div>Klikni a vyber fotku</div>
+    </div>
+    <input type="file" id="fileCapture" accept="image/*" capture="environment" onchange="onPhoto(event)">
+    <input type="file" id="fileGallery" accept="image/*" onchange="onPhoto(event)">
+    <div class="btn-row">
+      <button class="btn btn-green" onclick="document.getElementById('fileCapture').click()">📷 Odfotiť</button>
+      <button class="btn btn-outline" onclick="document.getElementById('fileGallery').click()">🖼 Galéria</button>
+    </div>
+  </div>
+
+  <div class="step" id="step2" style="display:none">
+    <div class="step-title"><div class="num" id="n2">2</div>AI extrakcia z QR</div>
+    <div class="spin-row" id="aiSpin">
+      <div class="spinner"></div>
+      <div class="spin-txt">AI číta QR kód z dokladu…</div>
+    </div>
+    <div id="dataOk" style="display:none">
+      <table class="dtable" id="dtable"></table>
+      <button class="btn btn-green" onclick="showStep3()">Pokračovať → POHODA XML</button>
+    </div>
+    <div class="fail" id="aiErr" style="display:none"></div>
+    <button class="btn btn-outline" id="retryBtn" style="display:none" onclick="retryAI()">↺ Skúsiť znova</button>
+  </div>
+
+  <div class="step" id="step3" style="display:none">
+    <div class="step-title"><div class="num" id="n3">3</div>POHODA XML</div>
+    <div class="tabs">
+      <div class="tab active" id="tab-xml" onclick="switchTab('xml')">Náhľad XML</div>
+      <div class="tab" id="tab-type" onclick="switchTab('type')">Typ dokladu</div>
+    </div>
+    <div id="tabXml">
+      <div class="xml-box" id="xmlBox"></div>
+      <div class="btn-row">
+        <button class="btn btn-outline" onclick="dlXML()">↓ Stiahnuť XML</button>
+        <button class="btn btn-green" onclick="showStep4()">Odoslať do POHODY →</button>
+      </div>
+    </div>
+    <div id="tabType" style="display:none">
+      <div class="igroup">
+        <label class="ilabel">Typ záznamu v POHODE</label>
+        <select class="ifield" id="docType">
+          <option value="issuedInvoice">Vydaná faktúra</option>
+          <option value="receivedInvoice" selected>Prijatá faktúra</option>
+          <option value="issuedCashVoucher">Vydaný pokladničný doklad</option>
+          <option value="receivedCashVoucher">Prijatý pokladničný doklad</option>
+        </select>
+      </div>
+      <div class="igroup">
+        <label class="ilabel">Agenda (stredisko)</label>
+        <input class="ifield" id="agenda" placeholder="napr. Všeobecná">
+      </div>
+      <button class="btn btn-green" onclick="regenerateXML()">↺ Regenerovať XML</button>
+    </div>
+  </div>
+
+  <div class="step" id="step4" style="display:none">
+    <div class="step-title"><div class="num" id="n4">4</div>Odoslať do POHODA mServer</div>
+    <div class="warn-box">
+      ⚠️ <strong>CORS obmedzenie:</strong> Priame volanie z mobilu/prehliadača na mServer blokuje prehliadač. Riešenia nižšie.
+    </div>
+    <div class="tabs">
+      <div class="tab active" id="tab-direct" onclick="switchMTab('direct')">Priamo</div>
+      <div class="tab" id="tab-proxy" onclick="switchMTab('proxy')">Cez proxy</div>
+      <div class="tab" id="tab-manual" onclick="switchMTab('manual')">Manuálne</div>
+    </div>
+
+    <div id="mDirect">
+      <div class="info-box">Funguje ak POHODA beží v <strong>rovnakej sieti</strong> (LAN/VPN) a mServer má povolený CORS.</div>
+      <div class="igroup">
+        <label class="ilabel">URL mServera</label>
+        <input class="ifield" id="mUrl" placeholder="http://192.168.1.100:5336" value="http://192.168.1.100:5336">
+      </div>
+      <div class="igroup">
+        <label class="ilabel">Používateľ POHODA</label>
+        <input class="ifield" id="mUser" placeholder="Admin">
+      </div>
+      <div class="igroup">
+        <label class="ilabel">Heslo POHODA</label>
+        <input class="ifield" type="password" id="mPass" placeholder="heslo">
+      </div>
+      <div class="igroup">
+        <label class="ilabel">ICO firmy</label>
+        <input class="ifield" id="mIco" placeholder="12345678">
+      </div>
+      <button class="btn btn-blue" onclick="sendToMServer()">⚡ Odoslať do POHODY</button>
+      <div class="ok" id="mOk" style="display:none">✓ Doklad importovaný do POHODY!</div>
+      <div class="fail" id="mErr" style="display:none"></div>
+    </div>
+
+    <div id="mProxy" style="display:none">
+      <div class="info-box"><strong>Node.js proxy skript</strong> — spustíš na PC kde beží POHODA.</div>
+      <button class="btn btn-outline" onclick="dlProxy()">↓ Stiahnuť proxy.js</button>
+      <div class="igroup" style="margin-top:10px">
+        <label class="ilabel">URL tvojej proxy</label>
+        <input class="ifield" id="proxyUrl" placeholder="http://192.168.1.100:3000/import">
+      </div>
+      <div class="igroup">
+        <label class="ilabel">ICO firmy</label>
+        <input class="ifield" id="proxyIco" placeholder="12345678">
+      </div>
+      <button class="btn btn-blue" onclick="sendViaProxy()">⚡ Odoslať cez proxy</button>
+      <div class="ok" id="proxyOk" style="display:none">✓ Odoslané cez proxy!</div>
+      <div class="fail" id="proxyErr" style="display:none"></div>
+    </div>
+
+    <div id="mManual" style="display:none">
+      <div class="info-box">Stiahni XML a importuj v POHODE cez <strong>Súbor → Import dát → XML</strong>.</div>
+      <button class="btn btn-green" onclick="dlXML()">↓ Stiahnuť POHODA XML</button>
+      <div class="ok" style="display:flex;margin-top:8px">📁 POHODA → Súbor → Import dát → XML → vyber súbor</div>
+    </div>
+  </div>
+</div>
+
+<script>
+let photoDataUrl = null;
+let parsed = null;
+let xmlStr = '';
+
+function onPhoto(e) {
+  const file = e.target.files[0]; if (!file) return;
+  e.target.value = '';
+  const r = new FileReader();
+  r.onload = ev => {
+    photoDataUrl = ev.target.result;
+    const area = document.getElementById('photoArea');
+    area.innerHTML = `<img src="${photoDataUrl}" alt="doklad">`;
+    document.getElementById('n1').textContent = '✓';
+    document.getElementById('n1').classList.add('done');
+    showStep2();
+  };
+  r.readAsDataURL(file);
+}
+
+function showStep2() {
+  const s = document.getElementById('step2');
+  s.style.display = 'block';
+  document.getElementById('dataOk').style.display = 'none';
+  document.getElementById('aiErr').style.display = 'none';
+  document.getElementById('retryBtn').style.display = 'none';
+  document.getElementById('aiSpin').style.display = 'flex';
+  s.scrollIntoView({ behavior: 'smooth' });
+  callAI();
+}
+
+async function callAI() {
+  try {
+    const base64 = photoDataUrl.split(',')[1];
+    const mtype = photoDataUrl.split(';')[0].split(':')[1] || 'image/jpeg';
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: mtype, data: base64 } },
+            { type: 'text', text: `Na obrázku je slovenský pokladničný doklad alebo faktúra.
+Extrahuj VŠETKY dostupné údaje priamo z textu dokladu (OCR) aj z QR kódu ak je prítomný.
+Odpovedaj IBA čistým JSON objektom bez markdown, bez vysvetlenia:
+{
+  "nazovFirmy": "",
+  "ulica": "",
+  "mesto": "",
+  "psc": "",
+  "ico": "",
+  "dic": "",
+  "icDph": "",
+  "cisloDokladu": "",
+  "datumVystavenia": "",
+  "datumSplatnosti": "",
+  "suma": "",
+  "mena": "EUR",
+  "dph": "",
+  "sadzbaDph": "",
+  "zakladDph": "",
+  "platba": "",
+  "polozky": "",
+  "iban": "",
+  "bic": "",
+  "variabilnySymbol": "",
+  "konstantnySymbol": "",
+  "specifickySymbol": "",
+  "sprava": "",
+  "uid": "",
+  "okp": "",
+  "krajina": "SK"
+}
+Ak pole nie je na doklade, nechaj prázdny string. polozky = zoznam položiek oddelených čiarkou.` }
+          ]
+        }]
+      })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+    const text = data.content.map(c => c.text||'').join('');
+    parsed = JSON.parse(text.replace(/```json|```/g,'').trim());
+    showData();
+  } catch(err) {
+    document.getElementById('aiSpin').style.display = 'none';
+    document.getElementById('aiErr').textContent = '⚠ ' + err.message;
+    document.getElementById('aiErr').style.display = 'block';
+    document.getElementById('retryBtn').style.display = 'block';
+  }
+}
+
+function retryAI() {
+  document.getElementById('aiErr').style.display = 'none';
+  document.getElementById('retryBtn').style.display = 'none';
+  document.getElementById('aiSpin').style.display = 'flex';
+  callAI();
+}
+
+function showData() {
+  document.getElementById('aiSpin').style.display = 'none';
+  const labels = {
+    nazovFirmy:'Firma', ico:'IČO', dic:'DIČ', icDph:'IČ DPH',
+    cisloDokladu:'Č. dokladu', datumVystavenia:'Dátum', suma:'Suma',
+    sadzbaDph:'Sadzba DPH', zakladDph:'Základ DPH', dph:'DPH',
+    platba:'Platba', polozky:'Položky', ulica:'Ulica', mesto:'Mesto',
+    iban:'IBAN', variabilnySymbol:'Var. symbol', sprava:'Správa',
+    uid:'UID', okp:'OKP'
+  };
+  let rows = '';
+  for (const [k, label] of Object.entries(labels)) {
+    const v = parsed[k]; if (!v) continue;
+    let val = esc(v);
+    if (k === 'iban') val = `<span class="iban">${val}</span>`;
+    if (k === 'suma') val = `<span class="amount">${val} ${esc(parsed.mena||'EUR')}</span>`;
+    rows += `<tr><td>${label}</td><td>${val}</td></tr>`;
+  }
+  document.getElementById('dtable').innerHTML = rows || '<tr><td colspan="2" style="color:#555">Žiadne dáta</td></tr>';
+  document.getElementById('dataOk').style.display = 'block';
+  document.getElementById('n2').textContent = '✓';
+  document.getElementById('n2').classList.add('done');
+}
+
+function showStep3() {
+  xmlStr = buildPohodaXML();
+  document.getElementById('xmlBox').innerHTML = syntaxHL(xmlStr);
+  document.getElementById('step3').style.display = 'block';
+  document.getElementById('step3').scrollIntoView({ behavior: 'smooth' });
+  if (parsed.ico) document.getElementById('mIco').value = parsed.ico;
+}
+
+function regenerateXML() {
+  xmlStr = buildPohodaXML();
+  document.getElementById('xmlBox').innerHTML = syntaxHL(xmlStr);
+  switchTab('xml');
+}
+
+function buildPohodaXML() {
+  const p = parsed;
+  const docType = document.getElementById('docType')?.value || 'receivedInvoice';
+  const agenda = document.getElementById('agenda')?.value || '';
+  const x = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const today = new Date().toISOString().slice(0,10);
+  const nazov = p.nazovFirmy || p.nazovPrijemcu || '';
+  return `<?xml version="1.0" encoding="Windows-1250"?>
+<dat:dataPack
+  xmlns:dat="http://www.stormware.cz/schema/version_2/data.xsd"
+  xmlns:inv="http://www.stormware.cz/schema/version_2/invoice.xsd"
+  xmlns:typ="http://www.stormware.cz/schema/version_2/type.xsd"
+  id="doklad_${Date.now()}"
+  ico="${x(p.ico||'')}"
+  application="DokladManager"
+  version="2.0">
+  <dat:dataPackItem id="inv_1" version="2.0">
+    <inv:invoice version="2.0">
+      <inv:invoiceHeader>
+        <inv:invoiceType>${docType}</inv:invoiceType>
+        <inv:date>${x(p.datumVystavenia||today)}</inv:date>
+        <inv:dateDue>${x(p.datumSplatnosti||today)}</inv:dateDue>
+        <inv:symVar>${x(p.variabilnySymbol)}</inv:symVar>
+        <inv:symKon>${x(p.konstantnySymbol)}</inv:symKon>
+        <inv:symSpec>${x(p.specifickySymbol)}</inv:symSpec>
+        <inv:note>${x(p.sprava)}</inv:note>${agenda?`
+        <inv:centre>${x(agenda)}</inv:centre>`:''}
+        <inv:partnerIdentity>
+          <typ:address>
+            <typ:name>${x(nazov)}</typ:name>
+            <typ:street>${x(p.ulica)}</typ:street>
+            <typ:city>${x(p.mesto)}</typ:city>
+            <typ:zip>${x(p.psc)}</typ:zip>
+            <typ:country><typ:ids>${x(p.krajina||'SK')}</typ:ids></typ:country>
+            <typ:ico>${x(p.ico)}</typ:ico>
+            <typ:dic>${x(p.dic)}</typ:dic>
+          </typ:address>
+        </inv:partnerIdentity>
+        <inv:paymentType><typ:ids>Bankový prevod</typ:ids></inv:paymentType>
+      </inv:invoiceHeader>
+      <inv:invoiceDetail>
+        <inv:invoiceItem>
+          <inv:text>${x(p.sprava||'Doklad')}</inv:text>
+          <inv:quantity>1</inv:quantity>
+          <inv:payVAT>false</inv:payVAT>
+          <inv:homeCurrency>
+            <typ:unitPrice>${x(p.suma||'0')}</typ:unitPrice>
+          </inv:homeCurrency>
+        </inv:invoiceItem>
+      </inv:invoiceDetail>
+      <inv:invoiceSummary>
+        <inv:roundingDocument>math2one</inv:roundingDocument>
+        <inv:homeCurrency>
+          <typ:priceHighSum>${x(p.suma||'0')}</typ:priceHighSum>
+          <typ:priceRound>0</typ:priceRound>
+        </inv:homeCurrency>
+      </inv:invoiceSummary>
+    </inv:invoice>
+  </dat:dataPackItem>
+</dat:dataPack>`;
+}
+
+function showStep4() {
+  document.getElementById('step4').style.display = 'block';
+  document.getElementById('n3').textContent = '✓';
+  document.getElementById('n3').classList.add('done');
+  document.getElementById('step4').scrollIntoView({ behavior: 'smooth' });
+}
+
+async function sendToMServer() {
+  const url = document.getElementById('mUrl').value.trim();
+  const user = document.getElementById('mUser').value.trim();
+  const pass = document.getElementById('mPass').value;
+  const ico = document.getElementById('mIco').value.trim();
+  if (!url || !user || !ico) { showMErr('Vyplň URL, používateľa a IČO'); return; }
+  document.getElementById('mOk').style.display = 'none';
+  document.getElementById('mErr').style.display = 'none';
+  try {
+    const res = await fetch(`${url.replace(/\/$/,'')}/xml`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/xml',
+        'Authorization': `Basic ${btoa(user+':'+pass)}`,
+        'STW-Application': 'DokladManager',
+        'STW-ICO': ico
+      },
+      body: buildPohodaXML()
+    });
+    if (res.ok) {
+      document.getElementById('mOk').style.display = 'flex';
+      document.getElementById('n4').textContent = '✓';
+      document.getElementById('n4').classList.add('done');
+    } else {
+      showMErr(`HTTP ${res.status}: ${res.statusText}`);
+    }
+  } catch(err) {
+    showMErr(`Spojenie zlyhalo: ${err.message}\n→ Skontroluj či beží POHODA a mServer\n→ Skontroluj firewall / VPN`);
+  }
+}
+
+async function sendViaProxy() {
+  const url = document.getElementById('proxyUrl').value.trim();
+  if (!url) { document.getElementById('proxyErr').textContent='Zadaj URL proxy'; document.getElementById('proxyErr').style.display='block'; return; }
+  document.getElementById('proxyOk').style.display = 'none';
+  document.getElementById('proxyErr').style.display = 'none';
+  try {
+    const res
